@@ -1,6 +1,6 @@
-import { CreateUserDTO } from "./models/CreateUserDTO";
-import { Measurement } from "./models/Measurement";
-import { ValidateResponse } from "./models/ValidationResponse";
+import { CreateUserDTO } from "./gModels/CreateUserDTO";
+import { Measurement } from "./gModels/Measurement";
+import { ValidateResponse } from "./gModels/ValidationResponse";
 
 /*
   1. Se om du kan hitta två stycken code smells i följande funktion och rätta till dem.

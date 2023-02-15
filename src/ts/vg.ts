@@ -1,7 +1,8 @@
-import { Cart } from "./models/Cart";
-import { Categories } from "./models/Categories";
-import { Product } from "./models/Product";
-import { SortOrder } from "./models/SortOrder";
+import { CartItem } from "./vgModels/CartItem";
+import { Item } from "./vgModels/Item";
+import { ItemCategory } from "./vgModels/ItemCategory";
+import { Product } from "./vgModels/Product";
+import { SortOrder } from "./vgModels/SortOrder";
 
 /*
 1. Se om du kan hitta problem med koden nedan och se om du kan göra den bättre.
@@ -46,224 +47,150 @@ function sortByNameAscending(products: Product[]) {
   products.sort((product1, product2) => product2.name.localeCompare(product1.name));
 }
 
+ ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 /*
   2. Refaktorera funktionen createProductHtml :)
   */
 
-export let cartList = JSON.parse(localStorage.getItem("savedCartList") || "[]");
-export let productList = JSON.parse( `
+const CART_STORAGE_NAME = 'savedItemsInCart';
+const SHOP_STORAGE_NAME = 'savedItemsInShop';
+
+export let itemsInCart = JSON.parse(localStorage.getItem(CART_STORAGE_NAME) || "[]");
+export let itemsInShop = JSON.parse( `
   [
     {
-      "picture": "pictureUrl",
+      "picture": "https://tinypng.com/images/social/website.jpg",
       "pictureAlt": "picAlt",
       "name": "name",
       "price": 20,
       "info": "info",
-      "productSpec": "prodSpec",
+      "productSpec": false,
       "category": "kriminella"
     }
   ]
-`);
+`) as Item[];
 
-export function createProductHtml() {
-  let quantity = 0;
-  for (let i = 0; i < cartList.length; i++) {
-    quantity += cartList[i].quantity;
-  }
-  let floatingCart = document.getElementById("floatingcartnumber") as HTMLElement;
-  floatingCart.innerHTML = "" + quantity;
-
-  console.log(productList);
-
-  for (let i = 0; i < productList.length; i++) {
-    let dogproduct: HTMLDivElement = document.createElement("div");
-    let dogImgContainer: HTMLDivElement = document.createElement("div");
-    dogImgContainer.className = "dogimgcontainer";
-    dogproduct.appendChild(dogImgContainer);
-    let dogImg: HTMLImageElement = document.createElement("img");
-
-    dogImg.src = productList[i].picture;
-    dogImg.alt = productList[i].pictureAlt;
-
-    dogImg.addEventListener("mouseover", () => {
-      cartSymbolContainer.classList.add("hover");
-      dogImg.classList.add("hover");
-    });
-
-    dogImg.addEventListener("mouseout", () => {
-      dogImg.classList.remove("hover");
-      cartSymbolContainer.classList.remove("hover");
-    });
-
-    dogImgContainer.appendChild(dogImg);
-    let cartSymbolContainer: HTMLDivElement = document.createElement("div");
-    cartSymbolContainer.className = "cartSymbolContainer";
-    dogImgContainer.appendChild(cartSymbolContainer);
-
-    let cartSymbol: HTMLElement = document.createElement("i");
-    cartSymbol.className = "bi bi-bag-plus";
-    cartSymbolContainer.appendChild(cartSymbol);
-
-    let name: HTMLHeadingElement = document.createElement("h5");
-    name.innerHTML = productList[i].name;
-    dogproduct.appendChild(name);
-
-    let price: HTMLHeadingElement = document.createElement("p");
-    price.innerHTML = "$" + productList[i].price;
-    dogproduct.appendChild(price);
-
-    let info: HTMLHeadingElement = document.createElement("p");
-    info.innerHTML = productList[i].info;
-    dogproduct.appendChild(info);
-
-    productList[i].productSpec = false;
-
-    dogImg.addEventListener("click", () => {
-      productList[i].productSpec = !productList[i].productSpec;
-      window.location.href = "product-spec.html#backArrow";
-      let listastext = JSON.stringify(productList);
-      localStorage.setItem("savedList", listastext);
-    });
-
-    cartSymbol.addEventListener("click", () => {
-      let cart = new Cart();
-      cart.addToCart(i);
-    });
-
-    if (productList[i].category === "sassy") {
-      let cat1: HTMLElement = document.getElementById("sassy") as HTMLElement;
-      dogproduct.className = "dogproduct";
-      cat1.appendChild(dogproduct);
-    }
-    if (productList[i].category === "kriminella") {
-      let cat2: HTMLElement = document.getElementById(
-        "kriminella"
-      ) as HTMLElement;
-      dogproduct.className = "dogproduct";
-      cat2.appendChild(dogproduct);
-    }
-    if (productList[i].category == "singlar") {
-      let cat3: HTMLElement = document.getElementById("singlar") as HTMLElement;
-      dogproduct.className = "dogproduct";
-      cat3.appendChild(dogproduct);
-    }
-    if (productList[i].category === "puppy") {
-      let cat4: HTMLElement = document.getElementById("puppy") as HTMLElement;
-      dogproduct.className = "dogproduct";
-      cat4.appendChild(dogproduct);
-    }
-    if (productList[i].category === "oldies") {
-      let cat5: HTMLElement = document.getElementById("oldies") as HTMLElement;
-      dogproduct.className = "dogproduct";
-      cat5.appendChild(dogproduct);
-    }
-  }
-  let listastext = JSON.stringify(productList);
-  localStorage.setItem("savedList", listastext);
-  sessionStorage.clear();
-}
-
-console.log(createProductHtml());
-
-//-------------------------
-class Cart2 {
+class Cart {
   addToCart(i: number) { }
 }
-export function createProductHtml2() {
-  let quantity = 0;
-  for (let i = 0; i < cartList.length; i++) {
-    quantity += cartList[i].quantity;
+
+let cartQtyHTML = document.getElementById("floatingcartnumber") as HTMLElement;
+
+export function renderAllHTML(cartItems: CartItem[], shopItems: Item[]) {
+  renderCartQuantity(cartItems);
+
+  for (const item of shopItems) {
+    let categoryHTML = document.getElementById(item.category) as HTMLElement | null;
+    if (categoryHTML == null) {
+      continue;
+    }
+
+    addItemToHTML(categoryHTML, item);
   }
-  let floatingCart = document.getElementById("floatingcartnumber") as HTMLElement;
-  floatingCart.innerHTML = "" + quantity;
 
-  for (let i = 0; i < productList.length; i++) {
-    let dogproduct: HTMLDivElement = document.createElement("div");
-    let dogImgContainer: HTMLDivElement = document.createElement("div");
-    dogImgContainer.className = "dogimgcontainer";
-    dogproduct.appendChild(dogImgContainer);
-    let dogImg: HTMLImageElement = document.createElement("img");
-
-    dogImg.src = productList[i].picture;
-    dogImg.alt = productList[i].pictureAlt;
-
-    dogImg.addEventListener("mouseover", () => {
-      cartSymbolContainer.classList.add("hover");
-      dogImg.classList.add("hover");
-    });
-
-    dogImg.addEventListener("mouseout", () => {
-      dogImg.classList.remove("hover");
-      cartSymbolContainer.classList.remove("hover");
-    });
-
-    dogImgContainer.appendChild(dogImg);
-    let cartSymbolContainer: HTMLDivElement = document.createElement("div");
-    cartSymbolContainer.className = "cartSymbolContainer";
-    dogImgContainer.appendChild(cartSymbolContainer);
-
-    let cartSymbol: HTMLElement = document.createElement("i");
-    cartSymbol.className = "bi bi-bag-plus";
-    cartSymbolContainer.appendChild(cartSymbol);
-
-    let name: HTMLHeadingElement = document.createElement("h5");
-    name.innerHTML = productList[i].name;
-    dogproduct.appendChild(name);
-
-    let price: HTMLHeadingElement = document.createElement("p");
-    price.innerHTML = "$" + productList[i].price;
-    dogproduct.appendChild(price);
-
-    let info: HTMLHeadingElement = document.createElement("p");
-    info.innerHTML = productList[i].info;
-    dogproduct.appendChild(info);
-
-    productList[i].productSpec = false;
-
-    dogImg.addEventListener("click", () => {
-      productList[i].productSpec = !productList[i].productSpec;
-      window.location.href = "product-spec.html#backArrow";
-      let listastext = JSON.stringify(productList);
-      localStorage.setItem("savedList", listastext);
-    });
-
-    cartSymbol.addEventListener("click", () => {
-      let cart = new Cart2();
-      cart.addToCart(i);
-    });
-
-    if (productList[i].category === "sassy") {
-      let cat1: HTMLElement = document.getElementById("sassy") as HTMLElement;
-      dogproduct.className = "dogproduct";
-      cat1.appendChild(dogproduct);
-    }
-    if (productList[i].category === "kriminella") {
-      let cat2: HTMLElement = document.getElementById(
-        "kriminella"
-      ) as HTMLElement;
-      dogproduct.className = "dogproduct";
-      cat2.appendChild(dogproduct);
-    }
-    if (productList[i].category == "singlar") {
-      let cat3: HTMLElement = document.getElementById("singlar") as HTMLElement;
-      dogproduct.className = "dogproduct";
-      cat3.appendChild(dogproduct);
-    }
-    if (productList[i].category === "puppy") {
-      let cat4: HTMLElement = document.getElementById("puppy") as HTMLElement;
-      dogproduct.className = "dogproduct";
-      cat4.appendChild(dogproduct);
-    }
-    if (productList[i].category === "oldies") {
-      let cat5: HTMLElement = document.getElementById("oldies") as HTMLElement;
-      dogproduct.className = "dogproduct";
-      cat5.appendChild(dogproduct);
-    }
-  }
-  let listastext = JSON.stringify(productList);
-  localStorage.setItem("savedList", listastext);
+  localStorage.setItem(SHOP_STORAGE_NAME, JSON.stringify(itemsInShop));
   sessionStorage.clear();
 }
+
+function renderCartQuantity(cartItems: CartItem[]) {
+  cartQtyHTML.innerHTML = cartItems.reduce((ack, item) => ack + item.quantity, 0).toString();
+}
+
+function addItemToHTML(parent: HTMLElement, item: Item) {
+  parent.innerHTML +=
+    /*html*/
+    `
+      <div id="parentContainer" class="dogproduct">
+        <div class="dogimgcontainer">
+          <img src="${item.picture}" alt="${item.pictureAlt}">
+          <div class="cartSymbolContainer">
+            <i class="bi bi-bag-plus"></i>
+          </div>
+        </div>
+
+        <h5>${item.name}</h5>
+        <p>$ ${item.price}</p>
+        <p>${item.info}</p>
+      </div>
+    `;
+  addItemListeners(parent, item);
+}
+
+function addItemListeners(el: HTMLElement, item: Item) {
+  let cartSymbolContainer = el.querySelector('.cartSymbolContainer') as HTMLDivElement;
+  let image = el.querySelector('img') as HTMLDivElement;
+  let iTag = el.querySelector('i') as HTMLElement;
+
+  image.addEventListener("mouseover", () => {
+    cartSymbolContainer.classList.add("hover");
+    image.classList.add("hover");
+  });
+
+  image.addEventListener("mouseout", () => {
+    cartSymbolContainer.classList.remove("hover");
+    image.classList.remove("hover");
+  });
+
+  item.productSpec = false;
+  image.addEventListener("click", () => {
+    item.productSpec = !item.productSpec;
+    window.location.href = "product-spec.html#backArrow";
+    localStorage.setItem(SHOP_STORAGE_NAME, JSON.stringify(itemsInShop));
+  });
+
+  iTag.addEventListener("click", () => {
+    addToCart(item, 1);
+  });
+}
+
+function addToCart(item: Item, quantity: number) {
+  let cartItem = mapToCartItem(item, quantity);
+  itemsInCart.push(cartItem);
+  localStorage.setItem(CART_STORAGE_NAME, JSON.stringify(itemsInCart));
+}
+
+function mapToCartItem(item: Item, quantity: number): CartItem {
+  return new CartItem(item.picture, item.pictureAlt, item.name, item.price, item.info, item.productSpec, item.category, quantity);
+}
+
+renderAllHTML(itemsInCart, itemsInShop);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /*
   3. Refaktorera funktionen getfromstorage
