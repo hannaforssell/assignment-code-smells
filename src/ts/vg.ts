@@ -1,87 +1,79 @@
+import { Cart } from "./models/Cart";
+import { Categories } from "./models/Categories";
+import { Product } from "./models/Product";
+import { SortOrder } from "./models/SortOrder";
+
 /*
 1. Se om du kan hitta problem med koden nedan och se om du kan göra den bättre.
 */
-export enum Sort {
-  PRICE_ASCENDING = "Stigande pris",
-  PRICE_DECENDING = "Sjunkande pris",
-  NAME_ALPHABETIC = "Alfabetisk ordning",
-  NAME_ALPHABETIC_REVERSE = "Omvänd alfabetisk ordning",
-}
 
-export class Product {
-  constructor(
-    public id: number,
-    public name: string,
-    public imageUrl: string[],
-    public price: number,
-    public description: string
-  ) {
-    this.id = id;
-    this.name = name;
-    this.imageUrl = imageUrl;
-    this.price = price;
-    this.description = description;
-  }
-}
+function sortProducts(products: Product[], sortOrder: SortOrder) {
+  let retProducts = [...products];
 
-export function sortProductsBy(sort: Sort, products: Product[]): Product[] {
-  let copiedList: Product[] = [];
-  products.forEach((product) => copiedList.push(product));
-
-  let sortedList: Product[] = [];
-  if (sort === Sort.PRICE_ASCENDING) {
-    sortedList = sortList("Price", copiedList);
-    sortedList.reverse();
-  } else if (sort === Sort.PRICE_DECENDING) {
-    sortedList = sortList("Price", copiedList);
-  } else if (sort === Sort.NAME_ALPHABETIC) {
-    sortedList = sortList("Name", copiedList);
-  } else if (sort === Sort.NAME_ALPHABETIC_REVERSE) {
-    sortedList = sortList("Name", copiedList);
-    sortedList.reverse();
+  switch (sortOrder) {
+    case SortOrder.PRICE_ASCENDING:
+      sortByPriceAscending(retProducts);
+      break;
+    case SortOrder.PRICE_DESCENDING:
+      sortByPriceDescending(retProducts);
+      break;
+    case SortOrder.NAME_ALPHABETIC:
+      sortByNameDescending(retProducts);
+      break;
+    case SortOrder.NAME_ALPHABETIC_REVERSE:
+      sortByNameAscending(retProducts);
+      break;
+    default:
+      break;
   }
 
-  return sortedList;
+  return retProducts;
 }
 
-function sortList(whichAttribute: string, products: Product[]): Product[] {
-  return products.sort((p1, p2) => {
-    if (whichAttribute === "Price") {
-      if (p1.price < p2.price) {
-        return 1;
-      } else if (p1.price > p2.price) {
-        return -1;
-      }
-      return 0;
-    } else {
-      if (p1.name < p2.name) {
-        return 1;
-      } else if (p1.name > p2.name) {
-        return -1;
-      }
-      return 0;
-    }
-  });
+function sortByPriceDescending(products: Product[]) {
+  products.sort((product1, product2) => product1.price - product2.price);
+}
+
+function sortByPriceAscending(products: Product[]) {
+  products.sort((product1, product2) => product2.price - product1.price);
+}
+
+function sortByNameDescending(products: Product[]) {
+  products.sort((product1, product2) => product1.name.localeCompare(product2.name));
+}
+
+function sortByNameAscending(products: Product[]) {
+  products.sort((product1, product2) => product2.name.localeCompare(product1.name));
 }
 
 /*
   2. Refaktorera funktionen createProductHtml :)
   */
-class Cart {
-  addToCart(i: number) {}
-}
+
 export let cartList = JSON.parse(localStorage.getItem("savedCartList") || "[]");
-export let productList = JSON.parse(localStorage.getItem("savedList") || "[]");
+export let productList = JSON.parse( `
+  [
+    {
+      "picture": "pictureUrl",
+      "pictureAlt": "picAlt",
+      "name": "name",
+      "price": 20,
+      "info": "info",
+      "productSpec": "prodSpec",
+      "category": "kriminella"
+    }
+  ]
+`);
 
 export function createProductHtml() {
   let quantity = 0;
   for (let i = 0; i < cartList.length; i++) {
     quantity += cartList[i].quantity;
   }
-  let floatingCart = document.getElementById(
-    "floatingcartnumber"
-  ) as HTMLElement;
+  let floatingCart = document.getElementById("floatingcartnumber") as HTMLElement;
   floatingCart.innerHTML = "" + quantity;
+
+  console.log(productList);
 
   for (let i = 0; i < productList.length; i++) {
     let dogproduct: HTMLDivElement = document.createElement("div");
@@ -171,6 +163,108 @@ export function createProductHtml() {
   sessionStorage.clear();
 }
 
+console.log(createProductHtml());
+
+//-------------------------
+class Cart2 {
+  addToCart(i: number) { }
+}
+export function createProductHtml2() {
+  let quantity = 0;
+  for (let i = 0; i < cartList.length; i++) {
+    quantity += cartList[i].quantity;
+  }
+  let floatingCart = document.getElementById("floatingcartnumber") as HTMLElement;
+  floatingCart.innerHTML = "" + quantity;
+
+  for (let i = 0; i < productList.length; i++) {
+    let dogproduct: HTMLDivElement = document.createElement("div");
+    let dogImgContainer: HTMLDivElement = document.createElement("div");
+    dogImgContainer.className = "dogimgcontainer";
+    dogproduct.appendChild(dogImgContainer);
+    let dogImg: HTMLImageElement = document.createElement("img");
+
+    dogImg.src = productList[i].picture;
+    dogImg.alt = productList[i].pictureAlt;
+
+    dogImg.addEventListener("mouseover", () => {
+      cartSymbolContainer.classList.add("hover");
+      dogImg.classList.add("hover");
+    });
+
+    dogImg.addEventListener("mouseout", () => {
+      dogImg.classList.remove("hover");
+      cartSymbolContainer.classList.remove("hover");
+    });
+
+    dogImgContainer.appendChild(dogImg);
+    let cartSymbolContainer: HTMLDivElement = document.createElement("div");
+    cartSymbolContainer.className = "cartSymbolContainer";
+    dogImgContainer.appendChild(cartSymbolContainer);
+
+    let cartSymbol: HTMLElement = document.createElement("i");
+    cartSymbol.className = "bi bi-bag-plus";
+    cartSymbolContainer.appendChild(cartSymbol);
+
+    let name: HTMLHeadingElement = document.createElement("h5");
+    name.innerHTML = productList[i].name;
+    dogproduct.appendChild(name);
+
+    let price: HTMLHeadingElement = document.createElement("p");
+    price.innerHTML = "$" + productList[i].price;
+    dogproduct.appendChild(price);
+
+    let info: HTMLHeadingElement = document.createElement("p");
+    info.innerHTML = productList[i].info;
+    dogproduct.appendChild(info);
+
+    productList[i].productSpec = false;
+
+    dogImg.addEventListener("click", () => {
+      productList[i].productSpec = !productList[i].productSpec;
+      window.location.href = "product-spec.html#backArrow";
+      let listastext = JSON.stringify(productList);
+      localStorage.setItem("savedList", listastext);
+    });
+
+    cartSymbol.addEventListener("click", () => {
+      let cart = new Cart2();
+      cart.addToCart(i);
+    });
+
+    if (productList[i].category === "sassy") {
+      let cat1: HTMLElement = document.getElementById("sassy") as HTMLElement;
+      dogproduct.className = "dogproduct";
+      cat1.appendChild(dogproduct);
+    }
+    if (productList[i].category === "kriminella") {
+      let cat2: HTMLElement = document.getElementById(
+        "kriminella"
+      ) as HTMLElement;
+      dogproduct.className = "dogproduct";
+      cat2.appendChild(dogproduct);
+    }
+    if (productList[i].category == "singlar") {
+      let cat3: HTMLElement = document.getElementById("singlar") as HTMLElement;
+      dogproduct.className = "dogproduct";
+      cat3.appendChild(dogproduct);
+    }
+    if (productList[i].category === "puppy") {
+      let cat4: HTMLElement = document.getElementById("puppy") as HTMLElement;
+      dogproduct.className = "dogproduct";
+      cat4.appendChild(dogproduct);
+    }
+    if (productList[i].category === "oldies") {
+      let cat5: HTMLElement = document.getElementById("oldies") as HTMLElement;
+      dogproduct.className = "dogproduct";
+      cat5.appendChild(dogproduct);
+    }
+  }
+  let listastext = JSON.stringify(productList);
+  localStorage.setItem("savedList", listastext);
+  sessionStorage.clear();
+}
+
 /*
   3. Refaktorera funktionen getfromstorage
   */
@@ -180,7 +274,7 @@ export class CartProduct {
     public image: string,
     public price: number,
     public amount: number
-  ) {}
+  ) { }
 }
 
 function getfromstorage() {
@@ -261,4 +355,8 @@ function getfromstorage() {
   checkkouttotal2.appendChild(totalprice2);
   totalprice2.innerHTML = addition + "$";
   totalprice2.id = "totalincenter";
+}
+
+export function test() {
+  console.log('test')
 }

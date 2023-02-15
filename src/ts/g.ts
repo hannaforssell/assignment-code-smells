@@ -1,17 +1,20 @@
+import { CreateUserDTO } from "./models/CreateUserDTO";
+import { Measurement } from "./models/Measurement";
+import { ValidateResponse } from "./models/ValidationResponse";
+
 /*
   1. Se om du kan hitta två stycken code smells i följande funktion och rätta till dem.
   Funktionen tar emot en lista med längshoppslängder och syftet med funktionen är att summera
   dessa hopplängder.
   */
 
-function getLength(jumpings: number[]): number {
-  let totalNumber = 0;
-
-  totalNumber = jumpings.reduce(
+function getTotalJumpDistance(jumpDistances: number[]): number {
+  if (jumpDistances.length == 0) {
+    return 0;
+  }
+  return jumpDistances.reduce(
     (jumpDistanceSoFar, currentJump) => jumpDistanceSoFar + currentJump
   );
-
-  return totalNumber;
 }
 
 /*
@@ -27,18 +30,11 @@ class Student {
 }
 
 function getStudentStatus(student: Student): string {
-  student.passed =
-    student.name == "Sebastian"
-      ? student.handedInOnTime
-        ? true
-        : false
-      : false;
+  let passingStudents: string[] = ['Sebastian'];
 
-  if (student.passed) {
-    return "VG";
-  } else {
-    return "IG";
-  }
+  student.passed = passingStudents.includes(student.name) && student.handedInOnTime;
+
+  return student.passed ? 'VG' : 'IG';
 }
 
 /*
@@ -46,22 +42,35 @@ function getStudentStatus(student: Student): string {
   Det finns flera code smells att identifiera här. Vissa är lurigare än andra.
   */
 
-class Temp {
-  constructor(public q: string, public where: Date, public v: number) {}
-}
+// class Temp {
+//   constructor(
+//     public q: string,
+//     public where: Date,
+//     public v: number
+//     ) {}
+// }
 
-function averageWeeklyTemperature(heights: Temp[]) {
-  let r = 0;
+// function averageWeeklyTemperature2(heights: Temp[]) {
+//   let r = 0;
 
-  for (let who = 0; who < heights.length; who++) {
-    if (heights[who].q === "Stockholm") {
-      if (heights[who].where.getTime() > Date.now() - 604800000) {
-        r += heights[who].v;
-      }
-    }
-  }
+//   for (let who = 0; who < heights.length; who++) {
+//     if (heights[who].q === "Stockholm") {
+//       if (heights[who].where.getTime() > Date.now() - 604800000) {
+//         r += heights[who].v;
+//       }
+//     }
+//   }
 
-  return r / 7;
+//   return r / 7;
+// }
+
+function averageTempLastWeek(measurements: Measurement[]) {
+  let today = new Date();
+  let sevenDaysAgoInMs = today.getTime() - 1000 * 60 * 60 * 24 * 7;
+
+  let relevantMeasurements = measurements.filter(measurement => measurement.location == 'Stockholm' && measurement.date.getTime() > sevenDaysAgoInMs);
+
+  return relevantMeasurements.reduce((ack, currMeas) => ack + currMeas.temp, 0) / 7;
 }
 
 /*
@@ -72,24 +81,16 @@ function averageWeeklyTemperature(heights: Temp[]) {
 function showProduct(
   name: string,
   price: number,
-  amount: number,
-  description: string,
-  image: string,
-  parent: HTMLElement
+  imageUrl: string,
+  parentElement: HTMLElement
 ) {
-  let container = document.createElement("div");
-  let title = document.createElement("h4");
-  let pris = document.createElement("strong");
-  let imageTag = document.createElement("img");
-
-  title.innerHTML = name;
-  pris.innerHTML = price.toString();
-  imageTag.src = image;
-
-  container.appendChild(title);
-  container.appendChild(imageTag);
-  container.appendChild(pris);
-  parent.appendChild(container);
+    parentElement.innerHTML += `
+      <div>
+        <h4>${name}</h4>
+        <img src="${imageUrl}">
+        <strong>${price}</strong>
+      </div>
+    `;
 }
 
 /*
@@ -97,25 +98,20 @@ function showProduct(
   går att göra betydligt bättre. Gör om så många som du kan hitta!
   */
 function presentStudents(students: Student[]) {
+  let listofPassedStudents = document.querySelector("ul#passedstudents") as HTMLElement;
+  let listOfFailedStudents = document.querySelector("ul#failedstudents") as HTMLElement;
+
   for (const student of students) {
+    let studentHTML = `
+    <li>
+      <input type="checkbox" ${student.handedInOnTime? 'checked' : ''}>
+      <span>${student.name}</span>
+    </li>
+  `
     if (student.handedInOnTime) {
-      let container = document.createElement("div");
-      let checkbox = document.createElement("input");
-      checkbox.type = "checkbox";
-      checkbox.checked = true;
-
-      container.appendChild(checkbox);
-      let listOfStudents = document.querySelector("ul#passedstudents");
-      listOfStudents?.appendChild(container);
+      listofPassedStudents.innerHTML += studentHTML;
     } else {
-      let container = document.createElement("div");
-      let checkbox = document.createElement("input");
-      checkbox.type = "checkbox";
-      checkbox.checked = false;
-
-      container.appendChild(checkbox);
-      let listOfStudents = document.querySelector("ul#failedstudents");
-      listOfStudents?.appendChild(container);
+      listOfFailedStudents.innerHTML += studentHTML;
     }
   }
 }
@@ -125,15 +121,10 @@ function presentStudents(students: Student[]) {
   Lorem, ipsum, dolor, sit, amet
   Exemplet under löser problemet, men inte speciellt bra. Hur kan man göra istället?
   */
-function concatenateStrings() {
-  let result = "";
-  result += "Lorem";
-  result += "ipsum";
-  result += "dolor";
-  result += "sit";
-  result += "amet";
 
-  return result;
+// Anropet multiConcat(['Lorem', 'ipsum', 'dolor', 'sit', 'amet']) har samma funktionalitet som tidigare funktion
+function multiConcat(texts: string[]) {
+  return texts.join('');
 }
 
 /* 
@@ -142,23 +133,27 @@ function concatenateStrings() {
     fler och fler parametrar behöver läggas till? T.ex. avatar eller adress. Hitta en bättre
     lösning som är hållbar och skalar bättre. 
 */
-function createUser(
-  name: string,
-  birthday: Date,
-  email: string,
-  password: string
-) {
-  // Validation
 
-  let ageDiff = Date.now() - birthday.getTime();
+const AGE_LIMIT = 20;
+
+function createUser(userDTO: CreateUserDTO) {
+  let ageValidation = validateAge(userDTO, AGE_LIMIT);
+
+  if (ageValidation.success) {
+    // Logik för att skapa en användare
+  } else {
+    return ageValidation.errorMessage;
+  }
+}
+
+function validateAge(userDTO: CreateUserDTO, ageLimit: number): ValidateResponse {
+  let ageDiff = Date.now() - userDTO.birthday.getTime();
   let ageDate = new Date(ageDiff);
   let userAge = Math.abs(ageDate.getUTCFullYear() - 1970);
 
-  console.log(userAge);
-
-  if (!(userAge < 20)) {
-    // Logik för att skapa en användare
-  } else {
-    return "Du är under 20 år";
+  if (userAge >= ageLimit) {
+    return new ValidateResponse(true);
   }
+
+  return new ValidateResponse(false, `Du är under ${ageLimit} år`);
 }
