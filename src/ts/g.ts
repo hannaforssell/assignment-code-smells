@@ -1,3 +1,4 @@
+import { Student } from "./gModels/Student";
 import { CreateUserDTO } from "./gModels/CreateUserDTO";
 import { Measurement } from "./gModels/Measurement";
 import { ValidateResponse } from "./gModels/ValidationResponse";
@@ -9,30 +10,16 @@ import { ValidateResponse } from "./gModels/ValidationResponse";
   */
 
 function getTotalJumpDistance(jumpDistances: number[]): number {
-  if (jumpDistances.length == 0) {
-    return 0;
-  }
-  return jumpDistances.reduce(
-    (jumpDistanceSoFar, currentJump) => jumpDistanceSoFar + currentJump
-  );
+  return jumpDistances.reduce((jumpDistanceSoFar, currentJump) => jumpDistanceSoFar + currentJump, 0);
 }
 
 /*
   2. I detta exempel har vi fokuserat på if-statements. Se om du kan göra exemplet bättre!
   */
 
-class Student {
-  constructor(
-    public name: string,
-    public handedInOnTime: boolean,
-    public passed: boolean
-  ) {}
-}
-
+let PASSING_STUDENTS: string[] = ['Sebastian'];
 function getStudentStatus(student: Student): string {
-  let passingStudents: string[] = ['Sebastian'];
-
-  student.passed = passingStudents.includes(student.name) && student.handedInOnTime;
+  student.passed = PASSING_STUDENTS.includes(student.name) && student.handedInOnTime;
 
   return student.passed ? 'VG' : 'IG';
 }
@@ -42,33 +29,12 @@ function getStudentStatus(student: Student): string {
   Det finns flera code smells att identifiera här. Vissa är lurigare än andra.
   */
 
-// class Temp {
-//   constructor(
-//     public q: string,
-//     public where: Date,
-//     public v: number
-//     ) {}
-// }
-
-// function averageWeeklyTemperature2(heights: Temp[]) {
-//   let r = 0;
-
-//   for (let who = 0; who < heights.length; who++) {
-//     if (heights[who].q === "Stockholm") {
-//       if (heights[who].where.getTime() > Date.now() - 604800000) {
-//         r += heights[who].v;
-//       }
-//     }
-//   }
-
-//   return r / 7;
-// }
-
-function averageTempLastWeek(measurements: Measurement[]) {
+// Anropet averageTempLastWeek(measurements, 'Stockholm') har samma funktionalitet som tidigare funktion
+function averageTempLastWeek(measurements: Measurement[], location: string) {
   let today = new Date();
   let sevenDaysAgoInMs = today.getTime() - 1000 * 60 * 60 * 24 * 7;
 
-  let relevantMeasurements = measurements.filter(measurement => measurement.location == 'Stockholm' && measurement.date.getTime() > sevenDaysAgoInMs);
+  let relevantMeasurements = measurements.filter(measurement => measurement.location == location && measurement.date.getTime() > sevenDaysAgoInMs);
 
   return relevantMeasurements.reduce((ack, currMeas) => ack + currMeas.temp, 0) / 7;
 }
@@ -97,6 +63,7 @@ function showProduct(
   5. Följande funktion kommer presentera studenter. Men det finns ett antal saker som 
   går att göra betydligt bättre. Gör om så många som du kan hitta!
   */
+
 function presentStudents(students: Student[]) {
   let listofPassedStudents = document.querySelector("ul#passedstudents") as HTMLElement;
   let listOfFailedStudents = document.querySelector("ul#failedstudents") as HTMLElement;
@@ -105,7 +72,6 @@ function presentStudents(students: Student[]) {
     let studentHTML = `
     <li>
       <input type="checkbox" ${student.handedInOnTime? 'checked' : ''}>
-      <span>${student.name}</span>
     </li>
   `
     if (student.handedInOnTime) {
